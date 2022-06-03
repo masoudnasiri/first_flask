@@ -18,7 +18,7 @@ app.register_blueprint(user_page, url_prefix="/user")"""
 
 if __name__ == "__main__":
     new_user =Instructor()
-    new_user.get_instructors()
+    new_user.generate_instructor_figure1()
 
 
      #app.run(debug=True)

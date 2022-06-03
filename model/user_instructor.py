@@ -1,7 +1,8 @@
 from model.user import User
 import os
 import json
-import  codecs
+import codecs
+import pandas
 
 class Instructor(User):
     def __init__(self, uid=-1, username="", password="", register_time="yyyy-MM-dd_HH:mm:ss.SSS", role="instructor" , email="" , display_name = "" ,job_title = "" , course_id_list = [] ):
@@ -18,7 +19,7 @@ class Instructor(User):
 
 
     def __str__(self):
-        return f"{self.uid};;;{self.username};;;{self.password};;;{self.rigester_time};;;{self.role};;;{self.email};;;{self.job_title};;;{self.course_id_list}"
+        return f"{self.uid};;;{self.username};;;{self.password};;;{self.register_time};;;{self.role};;;{self.email};;;{self.job_title};;;{self.course_id_list}"
 
 
     def get_instructors(self):
@@ -50,8 +51,9 @@ class Instructor(User):
                             email = username + "@gmail.com"
                             display_name = instructor["display_name"]
                             job_title = instructor["job_title"]
+                            role="instructor"
                             if instructor_id not in id_seen:
-                                one_instructor=f"{instructor_id};;;{username};;;{self.encrypt_password(str(password))};;;{self.register_time};;;{email};;;{display_name};;;{job_title};;;{course_id}\n"
+                                one_instructor=f"{instructor_id};;;{username};;;{self.encrypt_password(str(password))};;;{self.register_time};;;{role};;;{email};;;{display_name};;;{job_title};;;{course_id}\n"
                                 user_data.append(one_instructor)
                                 id_seen.add(instructor_id)
                                 user_dict[instructor_id] = user_data.index(one_instructor)
@@ -66,8 +68,43 @@ class Instructor(User):
         user_file.close()
 
 
-    def get_instructors_by_page(self):
-        pass
+    def get_instructors_by_page(self,page):
+        path=os.path.dirname(__file__).replace("\\model", "") + "\\data\\user.txt"
+        with codecs.open(path,encoding="utf-8",mode="r") as user_data:
+            users=user_data.readlines()
+            instructor_list=[]
+            for user in users:
+                one_user=user.split(";;;")
+                if one_user[4]=="instructor":
+                    insructor=Instructor(one_user[0],one_user[1],one_user[2],one_user[3],one_user[4],one_user[5],
+                                         one_user[6],one_user[7],one_user[8])
+                    instructor_list.append(insructor)
+        if len(instructor_list)%20!=0:
+            total_pages=(len(instructor_list)//20)+1
+        else:
+            total_pages=len(instructor_list)//20
+        return (instructor_list,total_pages,len(instructor_list))
+
 
     def generate_instructor_figure1(self):
-        pass
+        path = os.path.dirname(__file__).replace("\\model", "") + "\\data\\user.txt"
+        with codecs.open(path,encoding="utf-8",mode="r") as user_data:
+            users=user_data.readlines()
+            instructor_list=[]
+            for user in users:
+                one_user=user.split(";;;")
+                if one_user[4]=="instructor":
+                    insructor=Instructor(one_user[0],one_user[1],one_user[2],one_user[3],one_user[4],one_user[5],
+                                         one_user[6],one_user[7],one_user[8])
+                    course_list=one_user[8].split("--")
+                    instructor_list.append([insructor,len(course_list)])
+
+        sort_instructor=sorted(instructor_list,key=lambda x:x[1],reverse=True)
+        instructor_name=[]
+        num_of_course=[]
+        for item in sort_instructor:
+            instructor_name.append(item[0])
+            num_of_course.append(item[1])
+        data={"instructor_name":instructor_name,"number_of_course":num_of_course}
+        df=pandas.DataFrame(data,columns=[instructor_name,num_of_course])
+        print(df)
